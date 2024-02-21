@@ -4,8 +4,10 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
-  },
+    "start": "node server.js",
+    "build": "webpack --config webpack.config.js"
+  }
+  ,
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -20,5 +22,9 @@
     "method-override": "^3.0.0",
     "path": "^0.12.7"
   },
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "webpack": "^5.90.3",
+    "webpack-cli": "^5.1.4"
+  }
 }
