@@ -4,16 +4,20 @@ import flask
 from flask import Flask, request, jsonify, make_response
 import creds
 from sqlhelper import create_connection, execute_read_query, execute_query #class code functions imported
+import os
 
 
 app = flask.Flask(__name__) #Flask setup
 app.json.sort_keys = False
 
+conString = os.getenv("CON_STRING")
+userName = os.getenv("USER_NAME")
+password = os.getenv("PASSWORD")
+dbName = os.getenv("DB_NAME")
 
 @app.route('/api/login', methods=['GET']) 
 def get_hash():
-    myCreds = creds.Creds()  
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    conn = create_connection(conString, userName, password, dbName)
     sql = "SELECT HashesforDecrypt FROM Hashes WHERE idHashes = 1;" #hash stored in db for frontend login
     loginhash = execute_read_query(conn, sql)
     return jsonify(loginhash)
@@ -22,8 +26,7 @@ def get_hash():
 #FLOOR CRUDs
 @app.route('/api/floor', methods=['POST']) #creating floors
 def add_floor():
-    myCreds = creds.Creds()
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    conn = create_connection(conString, userName, password, dbName)
     new_floor = request.json
     sqlfloor = "SELECT * FROM floor;"
     floorlevel = execute_read_query(conn, sqlfloor)
@@ -43,16 +46,14 @@ def add_floor():
 
 @app.route('/api/floor', methods=['GET']) #views all floors
 def view_floor():
-    myCreds = creds.Creds()  
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    conn = create_connection(conString, userName, password, dbName)
     sql = "SELECT level, name FROM floor;" #selecting the variables only (No Id)
     floor = execute_read_query(conn, sql)
     return jsonify(floor)
 
 @app.route('/api/floor/<floorlevel>', methods=['PUT']) #Updating the floor via name and level (done in line with local url)
 def update_floor(floorlevel):
-    myCreds = creds.Creds()  
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    conn = create_connection(conString, userName, password, dbName)
     floor_update = request.json
     sqlfloor = "SELECT * FROM floor;" #Queries so that data is the latest for each request
     floorname = execute_read_query(conn, sqlfloor)
@@ -67,8 +68,7 @@ def update_floor(floorlevel):
 
 @app.route('/api/floor/<level>', methods=['DELETE']) #floor deletion 
 def delete_floor(level):
-    myCreds = creds.Creds() #class code creds format**
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    conn = create_connection(conString, userName, password, dbName)
     sqlfloor = "SELECT * FROM floor;"
     floorlevel = execute_read_query(conn, sqlfloor)
     levels = [i['level'] for i in floorlevel]
@@ -83,8 +83,7 @@ def delete_floor(level):
 #ROOM CRUDs
 @app.route('/api/room', methods=['POST'])
 def add_room():
-    myCreds = creds.Creds() 
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    conn = create_connection(conString, userName, password, dbName)
     new_room = request.json
     sqlroom = "SELECT * FROM room;" #Queries so that data is the latest for each request
     sqlfloor = "SELECT * FROM floor;"
@@ -114,8 +113,7 @@ def add_room():
 
 @app.route('/api/room', methods=['GET']) #views all rooms
 def view_room():
-    myCreds = creds.Creds()  
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    conn = create_connection(conString, userName, password, dbName)
     sql = """SELECT ro.number, ro.capacity, f.level as floor
                 FROM room ro
                 JOIN floor f ON ro.floor = f.id
@@ -126,8 +124,7 @@ def view_room():
 
 @app.route('/api/room/<roomnumber>', methods=['PUT']) #Updating capacity of rooms
 def update_room(roomnumber):
-    myCreds = creds.Creds()  
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    conn = create_connection(conString, userName, password, dbName)
     room_update = request.json
     sql = "UPDATE room SET capacity = %s WHERE number = %s" 
     values = (room_update["capacity"], roomnumber)
@@ -138,8 +135,7 @@ def update_room(roomnumber):
 
 @app.route('/api/room/<number>', methods=['DELETE']) #room deletion using parameters
 def delete_room(number):
-    myCreds = creds.Creds() #class code creds format**
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    conn = create_connection(conString, userName, password, dbName)
     sqlroom = "SELECT * FROM room;"
     roomquery = execute_read_query(conn, sqlroom)
     room_numbers = [i['number'] for i in roomquery]
@@ -163,8 +159,7 @@ def delete_room(number):
 # RESIDENT CRUDs
 @app.route('/api/resident', methods=['POST']) #creating residents 
 def add_resident():
-    myCreds = creds.Creds() 
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    conn = create_connection(conString, userName, password, dbName)
     new_resident = request.json
     sqlcap = "SELECT number, capacity FROM room;"
     capacities = execute_read_query(conn, sqlcap) #capacity checking
@@ -186,8 +181,7 @@ def add_resident():
 
 @app.route('/api/resident', methods=['GET']) #views all residents
 def view_resident():
-    myCreds = creds.Creds()  
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName) 
+    conn = create_connection(conString, userName, password, dbName)
     sql = """SELECT r.residentID, r.firstname, r.lastname, r.age, ro.number as `room` 
             FROM resident r
             JOIN room ro ON r.room = ro.id
@@ -199,8 +193,7 @@ def view_resident():
 
 @app.route('/api/resident/<residentID>', methods=['PUT']) 
 def update_resident(residentID):
-    myCreds = creds.Creds()  
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    conn = create_connection(conString, userName, password, dbName)
     resident_update = request.json
     sqlroom = """UPDATE room
                 SET capacity = capacity + 1
@@ -222,8 +215,7 @@ def update_resident(residentID):
 
 @app.route('/api/resident/<residentID>', methods=['DELETE']) #resident deletion
 def delete_resident(residentID):
-    myCreds = creds.Creds() #class code creds format**
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    conn = create_connection(conString, userName, password, dbName)
     sql = "DELETE FROM resident WHERE residentID = %s;" 
     sqlroom = """UPDATE room
                 SET capacity = capacity + 1
